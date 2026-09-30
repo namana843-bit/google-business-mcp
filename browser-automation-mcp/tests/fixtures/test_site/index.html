@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Playground - Universal Browser MCP</title>
+  <style>
+    body { font-family: sans-serif; margin: 30px; }
+    .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
+    .review-card { background: #f9f9f9; border-left: 4px solid #4285f4; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Local Test Suite Dashboard</h1>
+  <p id="description">Testing ground for generic browser automation tools.</p>
+
+  <!-- Navigation Section -->
+  <div class="card">
+    <h2>Navigation Links</h2>
+    <a href="#about" id="link-about">About Us</a>
+    <a href="#contact" id="link-contact">Contact Sales</a>
+    <a href="login.html" id="link-login">Sign In</a>
+  </div>
+
+  <!-- Form Interaction Section -->
+  <div class="card" id="form-section">
+    <h2>Interactive Form</h2>
+    <form id="sample-form" onsubmit="event.preventDefault(); document.getElementById('form-status').innerText = 'Submitted: ' + document.getElementById('search-input').value;">
+      <label for="search-input">Search Query</label><br>
+      <input type="text" id="search-input" placeholder="Type query here..."><br><br>
+
+      <label for="user-bio">User Biography</label><br>
+      <textarea id="user-bio" placeholder="Enter bio"></textarea><br><br>
+
+      <label for="country-select">Country</label><br>
+      <select id="country-select">
+        <option value="US">United States</option>
+        <option value="UK">United Kingdom</option>
+        <option value="CA">Canada</option>
+      </select><br><br>
+
+      <label>
+        <input type="checkbox" id="terms-check"> I accept the terms & conditions
+      </label><br><br>
+
+      <button type="submit" id="submit-btn">Submit Form</button>
+      <button type="button" id="counter-btn" onclick="let c = parseInt(this.getAttribute('data-count') || 0) + 1; this.setAttribute('data-count', c); this.innerText = 'Clicked ' + c;">Click Me</button>
+      <div id="form-status" style="margin-top: 10px; color: green; font-weight: bold;"></div>
+    </form>
+  </div>
+
+  <!-- Reviews Mockup Section (Google Business Style) -->
+  <div class="card" id="reviews-section">
+    <h2>Customer Reviews</h2>
+    <div class="review-card" data-review-id="rev-101" style="padding: 10px; margin-bottom: 10px;">
+      <div class="author fontDisplayLarge" style="font-weight: bold;">Alice Walker</div>
+      <div class="rating">5 stars</div>
+      <div class="date">2 days ago</div>
+      <div class="review-full-text">Fantastic service and friendly team! Highly recommended.</div>
+      <button type="button" class="reply-button" onclick="document.getElementById('reply-box-101').classList.remove('hidden');">Reply</button>
+      <div id="reply-box-101" class="hidden" style="margin-top: 10px;">
+        <textarea id="reply-textarea-101" placeholder="Write a reply..."></textarea><br>
+        <button type="button" id="reply-submit-101" onclick="this.parentElement.innerText = 'Response from the owner: ' + document.getElementById('reply-textarea-101').value;">Post Reply</button>
+      </div>
+    </div>
+
+    <div class="review-card" data-review-id="rev-102" style="padding: 10px;">
+      <div class="author" style="font-weight: bold;">Bob Miller</div>
+      <div class="rating">4 stars</div>
+      <div class="review-full-text">Great quality, but parking was a bit tight.</div>
+      <button type="button" class="reply-button">Reply</button>
+    </div>
+  </div>
+
+  <!-- Business Profile Section Mockup -->
+  <div class="card" id="profile-section">
+    <h1 data-attrid="title">Acme Automation Studio</h1>
+    <div data-attrid="subtitle">Software Company</div>
+    <div data-item-id="address">123 Tech Boulevard, Innovation City</div>
+    <div data-item-id="phone">+1-800-555-0199</div>
+    <button type="button" id="add-update-btn" onclick="document.getElementById('post-modal').classList.remove('hidden');">Add update</button>
+  </div>
+
+  <div id="post-modal" class="hidden card" role="dialog" style="background: #fff; border: 2px solid #4285f4;">
+    <h3>Create Update Post</h3>
+    <textarea id="post-content" placeholder="Share an update with your customers"></textarea><br>
+    <input type="file" id="post-photo-file" accept="image/*"><br>
+    <button type="button" id="post-publish-btn" onclick="document.getElementById('post-status').innerText = 'Published';">Post</button>
+    <div id="post-status"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "browser-automation": {
+      "command": "python",
+      "args": [
+        "-m",
+        "browser_mcp"
+      ],
+      "env": {
+        "BROWSER_MCP_HEADLESS": "false",
+        "BROWSER_MCP_APPROVAL_MODE": "strict",
+        "BROWSER_MCP_EXECUTABLE_PATH": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+        "BROWSER_MCP_PROFILE_PATH": "C:\\Users\\Naman\\AppData\\Local\\Google\\Chrome\\User Data\\Profile 8"
+      }
+    }
+  }
+}

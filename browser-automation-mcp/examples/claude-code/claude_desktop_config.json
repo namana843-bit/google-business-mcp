@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "browser": {
+      "command": "python",
+      "args": [
+        "-m",
+        "browser_mcp"
+      ],
+      "env": {
+        "BROWSER_MCP_HEADLESS": "false",
+        "BROWSER_MCP_PROFILE_DIR": "./profiles",
+        "BROWSER_MCP_APPROVAL_MODE": "strict"
+      }
+    }
+  }
+}

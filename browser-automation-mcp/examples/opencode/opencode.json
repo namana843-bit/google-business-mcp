@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/schema/config.json",
+  "mcp": {
+    "servers": {
+      "browser": {
+        "command": "python",
+        "args": [
+          "-m",
+          "browser_mcp"
+        ],
+        "env": {
+          "BROWSER_MCP_HEADLESS": "false",
+          "BROWSER_MCP_APPROVAL_MODE": "strict"
+        }
+      }
+    }
+  }
+}
