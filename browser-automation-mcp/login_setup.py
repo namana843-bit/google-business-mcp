@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -16,7 +17,7 @@ from browser_mcp.sites.google_business import open_google_business
 
 
 async def main():
-    profile = sys.argv[1] if len(sys.argv) > 1 else os.getenv("BROWSER_MCP_DEFAULT_PROFILE", "Profile 8")
+    profile = sys.argv[1] if len(sys.argv) > 1 else os.getenv("BROWSER_MCP_DEFAULT_PROFILE", "default")
     print(f"Connecting to Browser Manager (Target Profile: '{profile}')...")
     manager = get_manager()
 
@@ -39,25 +40,29 @@ async def main():
         print("=" * 60 + "\n")
 
         # Smart wait loop: checks every 2 seconds for successful login or browser window close
+        login_success = False
         for step in range(300):  # 10 minutes total
             await asyncio.sleep(2)
             try:
-                if not manager.is_running or not manager._context or not manager._context.pages:
-                    print("Browser window closed.")
+                if not manager.is_running or not manager.status().current_url:
+                    print("Browser window closed or context lost.")
                     break
-                page = await manager.get_active_page()
-                url = page.url.lower()
+                url = manager.status().current_url.lower()
                 # If redirected to Google Business dashboard or Google dashboard away from signin
                 if ("business.google.com" in url or "google.com/business" in url) and "accounts.google.com" not in url and "signin" not in url:
                     print("\n🎉 Detected successful login to Google Business!")
                     print("Giving 5 seconds for auth tokens and cookies to save...")
                     await asyncio.sleep(5)
+                    login_success = True
                     break
             except Exception:
                 print("Browser session ended.")
                 break
 
-        print("\nFinished! Saving session state...")
+        if login_success:
+            print("\n✅ Login successful! Session saved.")
+        else:
+            print("\n⚠️ Login was not completed or browser was closed early.")
     except Exception as e:
         print(f"Error during login setup: {e}")
     finally:

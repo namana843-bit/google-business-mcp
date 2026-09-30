@@ -127,12 +127,19 @@ class ProfileManager:
                 self.direct_profile_path.mkdir(parents=True, exist_ok=True)
             return self.direct_profile_path
 
-        # An absolute path to a profile directory is honoured as-is.
+        # An absolute path to a profile directory is honoured as-is, but must
+        # still be inside the managed profile root or a declared direct path
+        # to prevent pointing Chrome at arbitrary system directories.
         candidate = _clean_path(profile_name)
         if candidate.is_absolute():
             if create:
                 candidate.mkdir(parents=True, exist_ok=True)
-            return candidate.resolve()
+            resolved = candidate.resolve()
+            if self.direct_profile_path and resolved == self.direct_profile_path.resolve():
+                return resolved
+            if self.base_dir.resolve() in resolved.parents or resolved == self.base_dir.resolve():
+                return resolved
+            raise ValueError(f"Invalid profile path: {profile_name!r}")
 
         profile_path = (self.base_dir / (self._sanitize(profile_name) or _DEFAULT_NAME)).resolve()
 

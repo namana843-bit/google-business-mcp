@@ -50,14 +50,14 @@ async def temp_env():
     # Enforce headless mode for automated testing
     manager._headless = True
 
-    yield {
-        "temp_dir": temp_dir,
-        "db": db,
-        "pm": pm,
-        "manager": manager,
-    }
-
-    if manager.is_running:
-        await manager.close()
-
-    shutil.rmtree(temp_dir, ignore_errors=True)
+    try:
+        yield {
+            "temp_dir": temp_dir,
+            "db": db,
+            "pm": pm,
+            "manager": manager,
+        }
+    finally:
+        if manager.is_running:
+            await manager.close()
+        shutil.rmtree(temp_dir, ignore_errors=True)

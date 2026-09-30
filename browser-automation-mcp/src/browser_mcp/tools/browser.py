@@ -137,7 +137,7 @@ async def _run_step(manager: BrowserManager, step: ExecuteStep) -> ActionResult:
     action = step.action.lower()
 
     for field in _REQUIRED_FIELDS.get(action, ()):
-        if not getattr(step, field):
+        if getattr(step, field) is None:
             hint = _REQUIREMENT_HINTS.get(action, "")
             raise ValueError(f"Action '{action}' requires '{field}'{hint}")
 

@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -20,16 +21,20 @@ async def main():
     profile = sys.argv[2] if len(sys.argv) > 2 else "default"
     screenshot_path = sys.argv[1] if len(sys.argv) > 1 else str(project_root / "login.png")
 
-    await browser_launch(manager, profile=profile, headless=True)
-    await open_google_business(manager)
-    
-    # Wait a few seconds for the page to load
-    await asyncio.sleep(5)
-    
-    await browser_screenshot(manager, full_page=True, path=screenshot_path)
-    print(f"Screenshot saved to {screenshot_path}")
-    
-    await manager.close()
+    try:
+        await browser_launch(manager, profile=profile, headless=True)
+        await open_google_business(manager)
+        
+        # Wait a few seconds for the page to load
+        await asyncio.sleep(5)
+        
+        await browser_screenshot(manager, full_page=True, path=screenshot_path)
+        print(f"Screenshot saved to {screenshot_path}")
+    except Exception as e:
+        print(f"Error during screenshot capture: {e}")
+    finally:
+        if manager.is_running:
+            await manager.close()
 
 if __name__ == "__main__":
     asyncio.run(main())

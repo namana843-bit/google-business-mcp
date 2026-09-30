@@ -8,6 +8,7 @@ from playwright.async_api import Page
 from browser_mcp.browser.manager import BrowserManager
 from browser_mcp.models.schemas import ActionResult
 from browser_mcp.sites.base import SiteAdapter
+from browser_mcp.utils.errors import ErrorCode
 from browser_mcp.sites.google_business.accounts import (
     list_google_business_accounts,
     list_google_business_locations,
@@ -155,7 +156,7 @@ class GoogleBusinessAdapter(SiteAdapter):
         if handler is None:
             return ActionResult(
                 success=False,
-                error_type="UNKNOWN_ACTION",
+                error_type=ErrorCode.INVALID_REQUEST.value,
                 message=f"Unknown Google Business action: {action}",
             )
         return await handler(manager, kwargs)

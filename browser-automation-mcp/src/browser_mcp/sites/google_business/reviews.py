@@ -1,5 +1,6 @@
 """Google Business review discovery and public reply automation."""
 
+import re
 from typing import Any, Optional
 
 from playwright.async_api import Locator, Page
@@ -12,6 +13,12 @@ from browser_mcp.sites.google_business.locators import first_visible
 from browser_mcp.utils.logging import get_logger
 
 logger = get_logger("google_business.reviews")
+
+
+def _css_attr_value(value: str) -> str:
+    """Escapes a string for safe interpolation inside a single-quoted CSS attribute selector."""
+    return value.replace("\\", "\\\\").replace("'", "\\'")
+
 
 # Review containers differ between the Google Search merchant view and the
 # Business Manager dashboard.
@@ -164,7 +171,7 @@ async def reply_to_google_business_review(
     )
 
     page = await manager.get_active_page()
-    container = page.locator(f"div[data-review-id='{review_id}']").first
+    container = page.locator(f"div[data-review-id='{_css_attr_value(review_id)}']").first
     if await container.count() == 0:
         return await abort_with_screenshot(
             manager,

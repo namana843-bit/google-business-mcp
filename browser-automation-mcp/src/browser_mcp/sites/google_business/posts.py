@@ -1,5 +1,6 @@
 """Google Business public update/post publishing and deletion."""
 
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -14,6 +15,12 @@ from browser_mcp.utils.errors import ErrorCode
 from browser_mcp.utils.logging import get_logger
 
 logger = get_logger("google_business.posts")
+
+
+def _css_attr_value(value: str) -> str:
+    """Escapes a string for safe interpolation inside a single-quoted CSS attribute selector."""
+    return value.replace("\\", "\\\\").replace("'", "\\'")
+
 
 _CREATE_BUTTON_QUERIES = (
     "button:has-text('Add update')",
@@ -157,7 +164,9 @@ async def create_google_business_post(
 
     if await composer.get_attribute("contenteditable") == "true":
         await composer.click()
-    await composer.fill(content)
+        await composer.press_sequentially(content, delay=10)
+    else:
+        await composer.fill(content)
 
     if attached_media:
         await _attach_media(page, attached_media)
@@ -238,7 +247,7 @@ async def delete_google_business_post(
     )
 
     page = await manager.get_active_page()
-    container = page.locator(f"div[data-post-id='{post_id}']").first
+    container = page.locator(f"div[data-post-id='{_css_attr_value(post_id)}']").first
     if await container.count() == 0:
         return await abort_with_screenshot(
             manager,

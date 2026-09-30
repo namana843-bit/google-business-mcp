@@ -146,7 +146,6 @@ class DatabaseManager:
                     now,
                 ),
             )
-            conn.commit()
         return req
 
     def get_approval_request(self, approval_id: str) -> Optional[ApprovalRequest]:

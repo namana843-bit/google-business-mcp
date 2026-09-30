@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -25,7 +26,7 @@ async def main():
         
         print("\nFetching your Google Business Profile data...")
         profile_data = await get_google_business_profile(manager)
-        print("DATA:", profile_data)
+        logger.info("Fetched Google Business profile data")
         
     except ProfileLockedError:
         print("ERROR: PROFILE_LOCKED")

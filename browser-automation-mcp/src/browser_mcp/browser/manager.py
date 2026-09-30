@@ -1,5 +1,6 @@
 """Core BrowserManager lifecycle and operational controller."""
 
+import asyncio
 import base64
 import os
 from collections.abc import Awaitable, Callable
@@ -118,6 +119,7 @@ class BrowserManager:
         self._context: Optional[BrowserContext] = None
         self._active_page_index = 0
         self._active_profile: Optional[str] = None
+        self._lock = asyncio.Lock()
         self._headless = os.getenv("BROWSER_MCP_HEADLESS", "false").lower() == "true"
         self._default_timeout = int(os.getenv("BROWSER_MCP_DEFAULT_TIMEOUT", "30000"))
         self._executable_path: Optional[str] = os.getenv("BROWSER_MCP_EXECUTABLE_PATH")
@@ -141,9 +143,12 @@ class BrowserManager:
         return self._active_profile
 
     async def get_active_page(self) -> Page:
-        """Returns the focused page. Raises when the browser is not running."""
-        if not self._context or not self._context.pages:
+        """Returns the focused page, opening a new tab if needed."""
+        if not self._context:
             raise BrowserNotRunningError()
+        if not self._context.pages:
+            await self._context.new_page()
+            self._active_page_index = 0
         if self._active_page_index >= len(self._context.pages):
             self._active_page_index = len(self._context.pages) - 1
         return self._context.pages[self._active_page_index]
@@ -221,10 +226,15 @@ class BrowserManager:
             await self._discard_driver()
             raise
 
-        if not self._context.pages:
-            await self._context.new_page()
-        self._active_page_index = 0
-        self._active_profile = target_profile
+        try:
+            if not self._context.pages:
+                await self._context.new_page()
+        except Exception:
+            await self._discard_driver()
+            raise
+        async with self._lock:
+            self._active_page_index = 0
+            self._active_profile = target_profile
         self.db.touch_profile(target_profile)
 
         page = self._context.pages[0]
@@ -249,7 +259,8 @@ class BrowserManager:
         if not self._context.pages:
             page = await self._context.new_page()
             page.set_default_timeout(self._default_timeout)
-            self._active_page_index = 0
+            async with self._lock:
+                self._active_page_index = 0
         else:
             page = await self.get_active_page()
         return ActionResult(
@@ -325,8 +336,9 @@ class BrowserManager:
                 logger.warning(f"Error during context close: {e}")
             finally:
                 self._context = None
-                self._active_profile = None
-                self._active_page_index = 0
+                async with self._lock:
+                    self._active_profile = None
+                    self._active_page_index = 0
 
         if self._playwright:
             try:
@@ -393,7 +405,8 @@ class BrowserManager:
 
         page = await self._context.new_page()
         page.set_default_timeout(self._default_timeout)
-        self._active_page_index = len(self._context.pages) - 1
+        async with self._lock:
+            self._active_page_index = len(self._context.pages) - 1
 
         if url:
             return await self.navigate(url)
@@ -415,7 +428,8 @@ class BrowserManager:
                 f"Page index {index} out of range (0-{len(self._context.pages) - 1})",
             )
 
-        self._active_page_index = index
+        async with self._lock:
+            self._active_page_index = index
         page = self._context.pages[index]
         await page.bring_to_front()
         return ActionResult(
@@ -431,27 +445,31 @@ class BrowserManager:
         if not self._context:
             raise BrowserNotRunningError()
 
-        target = self._active_page_index if index is None else index
-        if not 0 <= target < len(self._context.pages):
-            return _failure(ErrorCode.INVALID_REQUEST, f"Page index {target} out of range.")
+        async with self._lock:
+            target = self._active_page_index if index is None else index
+            if not 0 <= target < len(self._context.pages):
+                return _failure(ErrorCode.INVALID_REQUEST, f"Page index {target} out of range.")
+            current_index = self._active_page_index
 
         await self._context.pages[target].close()
-        if not self._context.pages:
-            return await self.close()
 
-        # Closing a tab below the active one shifts every later tab down, so the
-        # active index has to follow the same tab rather than just be clamped.
-        if target < self._active_page_index:
-            self._active_page_index -= 1
-        self._active_page_index = min(self._active_page_index, len(self._context.pages) - 1)
-        active = await self.get_active_page()
-        return ActionResult(
-            success=True,
-            message=f"Closed page index {target}.",
-            url=active.url,
-            title=await active.title(),
-            data={"remaining_pages": len(self._context.pages)},
-        )
+        async with self._lock:
+            if not self._context.pages:
+                return await self.close()
+
+            # Closing a tab below the active one shifts every later tab down, so the
+            # active index has to follow the same tab rather than just be clamped.
+            if target < current_index:
+                current_index -= 1
+            self._active_page_index = min(current_index, len(self._context.pages) - 1)
+            active = await self.get_active_page()
+            return ActionResult(
+                success=True,
+                message=f"Closed page index {target}.",
+                url=active.url,
+                title=await active.title(),
+                data={"remaining_pages": len(self._context.pages)},
+            )
 
     # --- Navigation ---
 

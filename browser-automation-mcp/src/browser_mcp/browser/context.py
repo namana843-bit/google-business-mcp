@@ -38,13 +38,20 @@ def _resolve_executable(executable_path: Optional[str]) -> Optional[str]:
     A blank env var is common ("BROWSER_MCP_EXECUTABLE_PATH=" in .env), and
     passing that empty string straight to Playwright makes it spawn a process
     named "" and fail with the unhelpful "spawn . ENOENT".
+
+    Raises FileNotFoundError when a path is explicitly configured but does not
+    exist, so misconfigurations are caught immediately instead of silently
+    falling back to bundled Chromium.
     """
     candidate = executable_path or os.getenv("BROWSER_MCP_EXECUTABLE_PATH")
     if isinstance(candidate, str):
         candidate = candidate.strip().strip('"').strip("'").strip() or None
-    if candidate and not Path(candidate).exists():
-        logger.warning(f"Configured executable_path does not exist: {candidate}")
+    if not candidate:
         return None
+    if not Path(candidate).exists():
+        raise FileNotFoundError(
+            f"Configured BROWSER_MCP_EXECUTABLE_PATH does not exist: {candidate}"
+        )
     return candidate
 
 
