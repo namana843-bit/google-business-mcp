@@ -55,6 +55,10 @@ _TIMEOUT_HINTS = ("timeout", "exceeded")
 # Failure text Playwright produces when the browser died mid-action.
 _CLOSED_BROWSER_HINTS = ("closed", "processsingleton", "target page")
 
+# Additional hints for common Playwright failure modes.
+_NAVIGATION_ERROR_HINTS = ("net::", "navigation", "name not resolved", "ssl", "certificate")
+_CONNECTION_ERROR_HINTS = ("connection", "disconnected", "protocol", "ws://", "wss://")
+
 _PROFILE_LOCK_HINT = (
     "Hint: if Google Chrome is already running on your desktop, either close it "
     "completely or start it with '--remote-debugging-port=9222' and set "
@@ -75,7 +79,15 @@ def _failure(code: ErrorCode, message: str, url: Optional[str] = None) -> Action
 def _classify(exc: Exception) -> ErrorCode:
     """Classifies a Playwright exception into an ErrorCode."""
     text = str(exc).lower()
-    return ErrorCode.TIMEOUT if any(h in text for h in _TIMEOUT_HINTS) else ErrorCode.UNKNOWN
+    if any(h in text for h in _TIMEOUT_HINTS):
+        return ErrorCode.TIMEOUT
+    if any(h in text for h in _CLOSED_BROWSER_HINTS):
+        return ErrorCode.BROWSER_NOT_RUNNING
+    if any(h in text for h in _NAVIGATION_ERROR_HINTS):
+        return ErrorCode.NAVIGATION_ERROR
+    if any(h in text for h in _CONNECTION_ERROR_HINTS):
+        return ErrorCode.BROWSER_NOT_RUNNING
+    return ErrorCode.UNKNOWN
 
 
 def _truncate(value: str, max_length: int) -> tuple[str, int, bool]:

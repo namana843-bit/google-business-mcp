@@ -284,7 +284,7 @@ class ProfileManager:
         )
 
     def delete_profile(self, profile_name: str) -> bool:
-        """Deletes a profile directory.
+        """Deletes a profile directory and its database metadata.
 
         Returns False when the profile does not exist or the name is invalid.
         Refuses a name that sanitises to nothing (e.g. ".."), which would
@@ -300,4 +300,14 @@ class ProfileManager:
 
         shutil.rmtree(profile_path, ignore_errors=True)
         logger.info(f"Deleted profile directory: {profile_path}")
+
+        try:
+            from browser_mcp.storage.database import DatabaseManager
+            db = DatabaseManager()
+            with db._connection() as conn:
+                conn.execute("DELETE FROM profiles WHERE name = ?", (profile_name,))
+                conn.commit()
+        except Exception as e:
+            logger.warning(f"Failed to delete profile metadata for '{profile_name}': {e}")
+
         return True

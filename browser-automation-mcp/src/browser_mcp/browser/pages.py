@@ -1,6 +1,7 @@
 """Selector parsing, locator resolution, element inspection, and challenge detection."""
 
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 from playwright.async_api import Locator, Page
 
@@ -183,9 +184,8 @@ async def _needs_login(page: Page, url: str) -> bool:
     if "accounts.google.com/signin" in url or "accounts.google.com/v3/signin" in url:
         return True
 
-    if not any(marker in url for marker in ("login", "signin")):
-        return False
-    if not any(marker in url for marker in _LOGIN_PATH_MARKERS):
+    path = urlparse(url).path.lower()
+    if not any(path.endswith(marker) or f"{marker}/" in path for marker in _LOGIN_PATH_MARKERS):
         return False
 
     sign_in_control = page.locator(

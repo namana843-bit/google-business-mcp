@@ -243,7 +243,7 @@ async def tool_browser_wait(
     return await _call(
         browser_wait,
         seconds=seconds,
-selector=selector,
+        selector=selector,
         selector_type=selector_type,
         state=state,
     )

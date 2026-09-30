@@ -1,7 +1,6 @@
 import asyncio
 import os
 from pathlib import Path
-import sys
 
 from dotenv import load_dotenv
 
@@ -9,7 +8,8 @@ project_root = Path(__file__).resolve().parent
 load_dotenv(project_root / ".env")
 load_dotenv()
 
-sys.path.insert(0, str(project_root / "src"))
+# Requires the package to be installed in editable mode:
+#   pip install -e .
 from browser_mcp.server import get_manager
 from browser_mcp.tools.browser import browser_launch
 from browser_mcp.sites.google_business import open_google_business

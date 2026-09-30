@@ -240,11 +240,11 @@ async def delete_google_business_post(
     page = await manager.get_active_page()
     container = page.locator(f"div[data-post-id='{post_id}']").first
     if await container.count() == 0:
-        return ActionResult(
-            success=False,
-            error_type=ErrorCode.ELEMENT_NOT_FOUND.value,
-            message=f"Post '{post_id}' not found.",
-            url=page.url,
+        return await abort_with_screenshot(
+            manager,
+            page,
+            f"Post '{post_id}' not found.",
+            error_type=ErrorCode.ELEMENT_NOT_FOUND,
         )
 
     menu = await first_visible(container.locator(s) for s in _DELETE_MENU_SELECTORS)
@@ -262,11 +262,11 @@ async def delete_google_business_post(
         )
     )
     if delete_option is None:
-        return ActionResult(
-            success=False,
-            error_type=ErrorCode.ELEMENT_NOT_FOUND.value,
-            message="Delete option not found in post menu.",
-            url=page.url,
+        return await abort_with_screenshot(
+            manager,
+            page,
+            "Delete option not found in post menu.",
+            error_type=ErrorCode.ELEMENT_NOT_FOUND,
         )
 
     await delete_option.click()
