@@ -131,6 +131,17 @@ async def get_google_business_reviews(manager: BrowserManager, limit: int = 10) 
     page = await manager.get_active_page()
     await _open_reviews_tab(page)
 
+    await page.wait_for_timeout(1500)
+
+    previous_count = -1
+    for _ in range(20):
+        current = await find_reviews(page)
+        if len(current) >= limit or len(current) == previous_count:
+            break
+        previous_count = len(current)
+        await page.evaluate("window.scrollBy(0, 800)")
+        await page.wait_for_timeout(800)
+
     results: list[dict[str, Any]] = []
     for element in (await find_reviews(page))[:limit]:
         try:
