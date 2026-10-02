@@ -42,15 +42,24 @@ async def browser_launch(
     slow_mo: Optional[int] = None,
     executable_path: Optional[str] = None,
     cdp_url: Optional[str] = None,
+    url: Optional[str] = None,
 ) -> ActionResult:
-    """Launches or connects to a persistent browser instance with the given profile."""
-    return await manager.launch(
+    """Launches or connects to a persistent browser instance with the given profile.
+
+    If `url` is provided, the browser navigates to that address after launch.
+    """
+    result = await manager.launch(
         profile=profile,
         headless=headless,
         slow_mo=slow_mo,
         executable_path=executable_path,
         cdp_url=cdp_url,
     )
+    if url and result.success:
+        nav = await manager.navigate(url)
+        if not nav.success:
+            return nav
+    return result
 
 
 async def browser_close(manager: BrowserManager) -> ActionResult:

@@ -146,6 +146,7 @@ async def tool_browser_launch(
     slow_mo: Optional[int] = None,
     executable_path: Optional[str] = None,
     cdp_url: Optional[str] = None,
+    url: Optional[str] = None,
 ) -> dict[str, Any]:
     """Launch or connect to a persistent Chromium browser profile.
 
@@ -158,6 +159,7 @@ async def tool_browser_launch(
         slow_mo=slow_mo,
         executable_path=executable_path,
         cdp_url=cdp_url,
+        url=url,
     )
 
 
